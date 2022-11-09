@@ -1,0 +1,177 @@
+% -*- latex -*-
+% c1.tex
+% LabSK 15.03.2022
+
+% Wymagane pola (komentarz):
+% Dawid Chmielewski				% Imię Nazwisko
+% Praca w linii poleceń		% Temat ćwiczenia
+
+
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{polski}
+\usepackage[utf8]{inputenc}  			% Kodowanie pliku
+
+\hoffset=-3.0cm                         % Mniejszy lewy margines
+\textwidth=18cm                         % szerzej
+\evensidemargin=0pt
+
+\voffset=-3cm                           % Mniejszy górny margines
+\textheight=27cm                        % szerzej wzdłuż
+
+\setlength{\parindent}{0pt}             % Paragraf od początku linii
+\setlength{\parskip}{\medskipamount}    % Odstęp pomiędzy paragrafami
+\raggedbottom                           % bez rozciągania strony
+
+% Dodatkowe komendy
+\newcommand\BS{\char`\\}                % \BS == back-slash
+\newcommand\TY{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}   % \TY == większa tylda w \tt
+
+\thispagestyle{empty}			        % bez numeracji stron
+\usepackage{enumerate}
+
+
+\title{ Sieci komputerowe - sprawozdanie }
+\author{ Dawid Chmielewski, numer indeksu: 311188 }
+\date{30 marca 2022}
+
+\begin{document}
+
+\maketitle{Temat ćwiczenia: Konfiguracja środowiska. Diagnostyka adresów IP.}
+
+\section{Ogólny cel ćwiczenia}
+
+Ćwiczenie obejmowało konfigurację środowiska pracy poprzez instalację oraz aktualizację odpowiednich pakietów, tworzenie aliasów oraz połączeń tunelowych SSH oraz diagnostykę adresów IP.
+
+\section{Instalacja i zarządzanie oprogramowaniem w środowisku pracy - Chocolatey}
+
+Ważną częścią konfiguracji środowiska pracy jest instalacja lub aktualizacja niezbędnego oprogramowania. Przydatnym tutaj programem jest menadżer pakietów Chocolatey. Zainstalowana na moim komputerze wersja nie była tą najnowszą, w związku z tym konieczne bylo jej zaktualizowanie.
+
+\begin{verbatim}
+    PS C:\Users\Dawid> choco -v
+    1.0.0
+    PS C:\Users\Dawid> choco upgrade chocolatey
+\end{verbatim}
+
+Ostatecznie program został pomyślnie zaaktualizowany do najnowszej dostępnej wersji, czyli 1.0.1:
+
+\begin{verbatim}
+    PS C:\Users\Dawid> choco -v
+    1.0.1
+    PS C:\Users\Dawid>
+\end{verbatim}
+
+Chocolatey pozwala na wyświetlanie listy pakietów, dla których istnieją nie zainstalowane nowsze wersje. Użytkownik ma dostęp do tej listy za pomocą polecenia {\tt outdated}:
+
+{\tt
+\begin{verbatim}
+    PS C:\Users\Dawid> choco outdated
+    Chocolatey v1.0.1
+    Outdated Packages
+    Output is package name | current version | available version | pinned?
+
+    vim|8.2.4632|8.2.4643|false
+
+    Chocolatey has determined 1 package(s) are outdated.
+\end{verbatim}
+}
+
+Aktualizacja pakietów jest możliwa z poleceniem {\tt upgrade}. Możemy zarówno wskazać wszystkie z nich ({\tt upgrade all}), jak i pojedynczy, wskazując jego nazwę.
+
+{\tt
+\begin{verbatim}
+
+    PS C:\Users\Dawid> choco upgrade vim
+    Chocolatey v1.0.1
+    Upgrading the following packages:
+    vim
+    By upgrading, you accept licenses for the packages.
+    
+    (...)
+
+\end{verbatim}
+}
+
+\section{Rejestracja w ZeroTier}
+
+Jednym z zadań wykonanych w ramach ćwiczenia było zarejestrowanie się w ZeroTier. Konieczne było w tym przypadku podanie mojego unikalnego ID. 
+
+{\tt
+\begin{verbatim}
+
+    volt% zerotier-add ba78ba8de6
+    rejestracja stacji ba78ba8de6 w sieci ZET (83048a0632d2b7a6) ...
+
+\end{verbatim}
+}
+
+Efektem poprawnej rejestracji było utworzenie pliku {\tt .zet.id}, który przechowywał mój unikalny ID. Plik ten znajduje się w moim katalogu domowym.
+
+{\tt
+\begin{verbatim}
+
+    volt% ll -a .zet.id
+    -rw-r-----  1 chmield2  stud  11 27 mar 11:12 .zet.id
+    volt% cat .zet.id
+    ba78ba8de6
+    
+\end{verbatim}
+}
+
+\section{Aliasy i połączenia tunelowe SSH}
+
+Przy częstym używaniu SSH, każdorazowe logowanie się przy używaniu pełnego adresu domeny (tutaj: {\tt volt.zet.pw.edu.pl}) staje się uciążliwe. Rozwiązaniem tego problemu jest stworzenie pliku {\tt config} w folderze {\tt .ssh} Zawartość mojego pliku jest następująca:
+
+\begin{verbatim}
+    PS C:\Users\Dawid> cat .\.ssh\config
+    Host vol
+        Hostname volt.zet.pw.edu.pl
+        User chmield2
+    Host s*
+        ProxyJump vol
+        User live
+\end{verbatim}
+
+Po stworzeniu tego pliku mogłem logować się na volta za pomocą krótkiego polecenia {\tt ssh vol} oraz łączyć się tunelowo ze stacjami w pracowni (np. polecenie {\tt ssh live@s1}).
+
+
+\section{Diagnostyka sieci IP}
+
+Najważniejsze komendy stosowane podczas diagnostyki sieci IP to:
+
+\begin{itemize}
+    \item ifconfig - dotyczy systemów Linux- wyświetlanie oraz konfiguracja interfejsów sieciowych. 
+    Dostępne interfejsy na volcie: bge0, bge1, em0, em1, lo0, lagg0, vlan172, bridge0, ipfw0;
+    
+    \item ipconfig - polecenie analogiczne do {\tt ifconfig}, jednak stosowane w systemach Windows;
+    
+    \item Get-NetIPAddress- pozwala na wyświetlenie interfejsów sieciowych. Poniżej prezentuję pierwszy wyświetlony rezultat dla rodziny IPv4.
+    
+    {\tt
+    \begin{verbatim}
+    PS C:\Users\Dawid> Get-NetIPAddress -AddressFamily IPv4
+
+    IPAddress         : 172.31.146.82
+    InterfaceIndex    : 64
+    InterfaceAlias    : ZeroTier One [83048a0632d2b7a6]
+    AddressFamily     : IPv4
+    Type              : Unicast
+    
+    (...)
+    \end{verbatim}
+    }
+    
+    \item ping - polecenie testujące połączenie między maszyną testującą oraz testowaną; przydatne np. przy testowaniu połączenia internetowego poprzez podanie domeny.
+    
+    {\tt
+    \begin{verbatim}
+    PS C:\Users\Dawid> ping wp.pl
+
+    Pinging wp.pl [212.77.98.9] with 32 bytes of data:
+    Reply from 212.77.98.9: bytes=32 time=14ms TTL=52
+    \end{verbatim}
+    }
+    
+\end{itemize}
+
+\end{document}
